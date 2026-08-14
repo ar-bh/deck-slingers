@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://d0w802wh8xev6"]
+
+[ext_resource type="Texture2D" uid="uid://dlsgiw7l0cy6r" path="res://common/checkboard.png" id="1_ptpmq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lk3w2"]
+albedo_color = Color(0.8215504, 0.8803004, 1, 1)
+albedo_texture = ExtResource("1_ptpmq")
+uv1_scale = Vector3(10, 10, 10)
+
+[sub_resource type="Environment" id="Environment_ptpmq"]
+background_mode = 1
+background_color = Color(0.8117647, 0.8117647, 0.8117647, 1)
+
+[node name="DefaultMap" type="Node3D" unique_id=907273497]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=1554291328]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -73.5, 0)
+use_collision = true
+size = Vector3(106, 147, 106)
+material = SubResource("StandardMaterial3D_lk3w2")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=516806125]
+environment = SubResource("Environment_ptpmq")
