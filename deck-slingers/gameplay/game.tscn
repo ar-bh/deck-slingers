@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://c8ec1vgce4jvk"]
 
-[ext_resource type="PackedScene" uid="uid://d0w802wh8xev6" path="res://map/default/default_map.tscn" id="1_726hq"]
+[ext_resource type="PackedScene" uid="uid://5civhqsj56dw" path="res://map/default/StarterScene.tscn" id="2_726hq"]
 [ext_resource type="PackedScene" uid="uid://gbpb2uun5cvr" path="res://player/player.tscn" id="2_wvykf"]
 
 [node name="Game" type="Node3D" unique_id=1457588595]
 
-[node name="DefaultMap" parent="." unique_id=907273497 instance=ExtResource("1_726hq")]
-
 [node name="Player" parent="." unique_id=882158080 instance=ExtResource("2_wvykf")]
+
+[node name="World" parent="." unique_id=1474880793 instance=ExtResource("2_726hq")]
