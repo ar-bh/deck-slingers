@@ -6,8 +6,11 @@ class_name Player extends CharacterBody3D
 #region movement and camera
 @export_group("Movement")
 @export var walk_speed := 7.0
-@export var sprint_speed := 8.5
 @export var jump_velocity := 6.0
+@export var dash_speed := 75.0
+@export var dash_duration := 0.15
+@export var dash_cooldown := 0.4
+@export var dash_speed_curve: Curve
 
 @export_group("Mouse Look")
 @export var vertical_mouse_sensitivity := 0.003
@@ -18,7 +21,10 @@ class_name Player extends CharacterBody3D
 @export var horizontal_controller_sensitivity := 3.0
 @export var controller_deadzone := 0.15
 
-var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+var gravity: float = 12.5
+var _dash_time_left := 0.0
+var _dash_cooldown_left := 0.0
+var _dash_direction := Vector3.ZERO
 #endregion
 
 func _ready() -> void:
@@ -45,13 +51,44 @@ func _process(delta: float) -> void:
 	#endregion
 	
 func _physics_process(delta: float) -> void:
+	if _dash_cooldown_left > 0.0:
+		_dash_cooldown_left -= delta
+	
+	if _dash_time_left > 0.0:
+		_dash_time_left -= delta
+		# this makes t a percent basically from 0% to 100% in terms of how much dash is completed,
+		# to match with the curve
+		var t := 1.0 - (_dash_time_left / dash_duration)
+		t = clampf(t, 0.0, 1.0)
+		velocity = _dash_direction * dash_speed * dash_speed_curve.sample(t)
+		if _dash_time_left > 0.0:
+			move_and_slide()
+			return
+		
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+		
+	# dash is starting
+	if Input.is_action_just_pressed("dash") and _dash_cooldown_left <= 0.0:
+		var dir := -_camera.global_transform.basis.z
+		if is_on_floor():
+			dir.y = 0.0
+		if dir.length_squared() < 0.0001:
+			dir = -global_transform.basis.z
+			dir.y = 0.0
+		dir = dir.normalized()
+		_dash_direction = dir
+		_dash_time_left = dash_duration
+		_dash_cooldown_left = dash_cooldown
+		velocity = _dash_direction * dash_speed * dash_speed_curve.sample(0.0)
+		move_and_slide()
+		return
+		
 		
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward").normalized()
 	var wish_dir := (global_transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()\
 		if input_dir != Vector2.ZERO else Vector3.ZERO
-	var current_speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
+	var current_speed := walk_speed
 	
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y += jump_velocity

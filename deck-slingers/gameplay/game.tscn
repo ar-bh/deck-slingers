@@ -3,6 +3,10 @@
 [ext_resource type="PackedScene" uid="uid://d0w802wh8xev6" path="res://map/default/default_map.tscn" id="1_726hq"]
 [ext_resource type="PackedScene" uid="uid://gbpb2uun5cvr" path="res://player/player.tscn" id="2_wvykf"]
 
+[sub_resource type="Curve" id="Curve_726hq"]
+_data = [Vector2(0, 0.15756035), 0.0, 7.227445, 0, 0, Vector2(0.19620255, 1), 0.13049689, 0.13049689, 0, 0, Vector2(1, 0.14104187), 0.05326327, 0.0, 0, 0]
+point_count = 3
+
 [sub_resource type="Environment" id="Environment_726hq"]
 background_mode = 1
 background_color = Color(1, 1, 1, 1)
@@ -13,6 +17,7 @@ ambient_light_color = Color(1, 1, 1, 1)
 
 [node name="Player" parent="." unique_id=882158080 instance=ExtResource("2_wvykf")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 18)
+dash_speed_curve = SubResource("Curve_726hq")
 
 [node name="DefaultMap" parent="." unique_id=215789913 instance=ExtResource("1_726hq")]
 
