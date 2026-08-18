@@ -6,19 +6,24 @@ class_name Player extends CharacterBody3D
 #region movement and camera
 @export_group("Movement")
 @export var walk_speed := 7.0
-@export var jump_velocity := 6.0
 @export var dash_speed := 75.0
-@export var dash_duration := 0.15
+@export var dash_duration := 0.3
 @export var dash_cooldown := 0.4
 @export var dash_speed_curve: Curve
+
+@export_group("Jump & Gravity")
+@export var gravity_up := 30.0
+@export var gravity_down := 2.0 * gravity_up
+@export var jump_velocity := 10.0
+@export var max_fall_speed := 50.0
 
 @export_group("Mouse Look")
 @export var vertical_mouse_sensitivity := 0.003
 @export var horizontal_mouse_sensitivity := 0.003
 
 @export_group("Controller Look")
-@export var vertical_controller_sensitivity := 3.0
-@export var horizontal_controller_sensitivity := 3.0
+@export var vertical_controller_sensitivity := 5.0
+@export var horizontal_controller_sensitivity := 5.0
 @export var controller_deadzone := 0.15
 
 var gravity: float = 12.5
@@ -29,7 +34,7 @@ var _dash_direction := Vector3.ZERO
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	
+	 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -51,6 +56,11 @@ func _process(delta: float) -> void:
 	#endregion
 	
 func _physics_process(delta: float) -> void:
+	if not is_on_floor():
+		var g := gravity_down if velocity.y < 0.0 else gravity_up
+		velocity.y -= g * delta
+		velocity.y = maxf(velocity.y, -max_fall_speed)
+	
 	if _dash_cooldown_left > 0.0:
 		_dash_cooldown_left -= delta
 	
@@ -65,17 +75,23 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			return
 		
-	if not is_on_floor():
-		velocity.y -= gravity * delta
+	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward").normalized()
+	var wish_dir := (global_transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()\
+		if input_dir != Vector2.ZERO else Vector3.ZERO
 		
-	# dash is starting
+	#region dash is starting
 	if Input.is_action_just_pressed("dash") and _dash_cooldown_left <= 0.0:
-		var dir := -_camera.global_transform.basis.z
+		var dir := Vector3.ZERO
 		if is_on_floor():
+			dir = wish_dir
+			if dir.length_squared() < 0.001:
+				dir = -global_transform.basis.z
 			dir.y = 0.0
-		if dir.length_squared() < 0.0001:
-			dir = -global_transform.basis.z
-			dir.y = 0.0
+		else:
+			if input_dir != Vector2.ZERO:
+				dir = _camera.global_transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)
+			else:
+				dir = -_camera.global_transform.basis.z
 		dir = dir.normalized()
 		_dash_direction = dir
 		_dash_time_left = dash_duration
@@ -83,11 +99,8 @@ func _physics_process(delta: float) -> void:
 		velocity = _dash_direction * dash_speed * dash_speed_curve.sample(0.0)
 		move_and_slide()
 		return
+	#endregion
 		
-		
-	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward").normalized()
-	var wish_dir := (global_transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()\
-		if input_dir != Vector2.ZERO else Vector3.ZERO
 	var current_speed := walk_speed
 	
 	if Input.is_action_just_pressed("jump") and is_on_floor():
