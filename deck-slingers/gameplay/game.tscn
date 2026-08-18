@@ -9,14 +9,18 @@ point_count = 3
 
 [sub_resource type="Environment" id="Environment_726hq"]
 background_mode = 1
-background_color = Color(1, 1, 1, 1)
+background_color = Color(0.62, 0.78, 0.92, 1)
 ambient_light_source = 2
-ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_color = Color(0.86, 0.9, 0.95, 1)
+fog_enabled = true
+fog_light_color = Color(0.7, 0.82, 0.92, 1)
+fog_density = 0.004
+fog_aerial_perspective = 0.4
 
 [node name="Game" type="Node3D" unique_id=1457588595]
 
 [node name="Player" parent="." unique_id=882158080 instance=ExtResource("2_wvykf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 18)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 16)
 dash_speed_curve = SubResource("Curve_726hq")
 
 [node name="DefaultMap" parent="." unique_id=215789913 instance=ExtResource("1_726hq")]
