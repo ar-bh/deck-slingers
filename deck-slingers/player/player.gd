@@ -135,7 +135,7 @@ func _physics_process(delta: float) -> void:
 	
 	#region start slide
 	if slide_enabled and not _sliding and is_on_floor() and wish_dir != Vector3.ZERO \
-			and Input.is_action_just_pressed("crouch"):
+			and Input.is_action_pressed("crouch"):
 		_sliding = true
 		var carried := Vector3(velocity.x, 0.0, velocity.z).length()
 		velocity.x += wish_dir.x * (carried + slide_boost)
@@ -160,7 +160,9 @@ func _physics_process(delta: float) -> void:
 		
 	#region slide camera
 	if slide_enabled:
-		var crouched := _sliding or Input.is_action_pressed("crouch")
+		var crouched := is_on_floor() and (
+			_sliding or (Input.is_action_pressed("crouch") and wish_dir == Vector3.ZERO)
+		)
 		_update_slide_camera(delta, crouched)
 	else:
 		_update_slide_camera(delta, false)
