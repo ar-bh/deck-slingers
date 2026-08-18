@@ -125,27 +125,28 @@ func _physics_slide(delta: float) -> void:
 		velocity.x += wish_dir.x * slide_boost
 		velocity.z += wish_dir.z * slide_boost
 		
-	# jump cancels slide
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	var hopped := false
+	if is_on_floor() and Input.is_action_pressed("jump"):
 		_sliding = false
-		var dir := _camera_move_dir(input_dir)
-		if dir != Vector3.ZERO:
-			velocity.x = dir.x * horiz_speed
-			velocity.z = dir.z * horiz_speed
 		velocity.y = jump_velocity
-
+		hopped = true
 		
 	var crouched := _sliding or Input.is_action_pressed("crouch")
 	_update_slide_camera(delta, crouched)
 	
-	# walk normally
-	if is_on_floor() and not _sliding:
+	if is_on_floor() and not hopped and not _sliding:
 		var target := wish_dir * walk_speed
 		velocity.x = move_toward(velocity.x, target.x, ground_acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, ground_acceleration * delta)
-	elif is_on_floor() and _sliding:
+	elif is_on_floor() and not hopped and _sliding:
 		velocity.x = move_toward(velocity.x, 0.0, slide_friction * delta)
 		velocity.z = move_toward(velocity.z, 0.0, slide_friction * delta)
+	else:
+		if wish_dir != Vector3.ZERO:
+			var along := velocity.dot(wish_dir)
+			var add := walk_speed - along
+			if add > 0.0:
+				velocity += wish_dir * minf(add, air_acceleration * delta)
 		
 	# do not go too fast
 	var horiz := Vector3(velocity.x, 0.0, velocity.z) # horizontal velocity vector
