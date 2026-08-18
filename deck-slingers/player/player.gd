@@ -47,7 +47,7 @@ var _dash_hop_ready := false
 var _dash_time_left := 0.0
 var _dash_cooldown_left := 0.0
 var _dash_direction := Vector3.ZERO
-var _dash_base_velocity := Vector3.ZERO
+var _dash_carried_speed := 0.0
 #endregion
 
 #region slide movement variables
@@ -98,7 +98,7 @@ func _physics_process(delta: float) -> void:
 			_dash_time_left -= delta
 			var t := 1.0 - (_dash_time_left / dash_duration) # percentage form of how much of dash is done, to use in curve
 			t = clampf(t, 0.0, 1.0)
-			velocity = _dash_base_velocity + _dash_direction * dash_speed * dash_speed_curve.sample(t)
+			velocity = _dash_direction * (_dash_carried_speed + dash_speed * dash_speed_curve.sample(t))
 			if _dash_time_left > 0.0:
 				move_and_slide()
 				return
@@ -124,11 +124,11 @@ func _physics_process(delta: float) -> void:
 				dir = -_camera.global_transform.basis.z
 		dir = dir.normalized()
 		_dash_direction = dir
-		_dash_base_velocity = velocity
+		_dash_carried_speed = velocity.length()
 		_dash_time_left = dash_duration
 		_dash_cooldown_left = dash_cooldown
 		_dash_hop_ready = true
-		velocity = _dash_base_velocity + _dash_direction * dash_speed * dash_speed_curve.sample(0.0)
+		velocity = _dash_direction * (_dash_carried_speed + dash_speed * dash_speed_curve.sample(0.0))
 		move_and_slide()
 		return
 	#endregion
@@ -137,8 +137,9 @@ func _physics_process(delta: float) -> void:
 	if slide_enabled and not _sliding and is_on_floor() and wish_dir != Vector3.ZERO \
 			and Input.is_action_just_pressed("crouch"):
 		_sliding = true
-		velocity.x += wish_dir.x * slide_boost
-		velocity.z += wish_dir.z * slide_boost
+		var carried := Vector3(velocity.x, 0.0, velocity.z).length()
+		velocity.x += wish_dir.x * (carried + slide_boost)
+		velocity.z += wish_dir.z * (carried + slide_boost)
 		
 	if not slide_enabled:
 		_sliding = false
