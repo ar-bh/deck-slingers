@@ -149,6 +149,12 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and Input.is_action_pressed("jump"):
 		_sliding = false
 		_dash_hop_ready = false
+		var dir := wish_dir
+		if dir == Vector3.ZERO:
+			dir = Vector3(-global_transform.basis.z.x, 0.0, -global_transform.basis.z.z).normalized()
+		var carried := Vector3(velocity.x, 0.0, velocity.z).length()
+		velocity.x = dir.x * carried
+		velocity.z = dir.z * carried
 		velocity.y = jump_velocity
 		hopped = true
 		
