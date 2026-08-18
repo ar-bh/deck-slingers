@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" uid="uid://bhgg5bbaxw3je" path="res://player/player.gd" id="1_oul6g"]
 
+[sub_resource type="Curve" id="Curve_oul6g"]
+_data = [Vector2(0.0031645596, 0.20024127), 0.0, 0.0, 0, 0, Vector2(0.24367088, 1), 0.0, 0.0, 0, 0, Vector2(0.39873418, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.40533674), 0.0, 0.0, 0, 0]
+point_count = 4
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kqu6x"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_kqu6x"]
@@ -11,6 +15,7 @@ size = Vector3(0.25, 0.25, 0.25)
 
 [node name="Player" type="CharacterBody3D" unique_id=882158080]
 script = ExtResource("1_oul6g")
+dash_speed_curve = SubResource("Curve_oul6g")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=182550620]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
