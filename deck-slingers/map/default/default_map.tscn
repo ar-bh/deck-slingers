@@ -128,6 +128,22 @@ uv1_scale = Vector3(0.5, 0.5, 0.5)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
+[sub_resource type="StandardMaterial3D" id="mat_gold"]
+albedo_color = Color(0.95, 0.82, 0.28, 1)
+albedo_texture = ExtResource("1_tex")
+roughness = 0.85
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="mat_gold_dark"]
+albedo_color = Color(0.78, 0.55, 0.14, 1)
+albedo_texture = ExtResource("1_tex")
+roughness = 0.85
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
 [node name="DefaultMap" type="Node3D" unique_id=1579329437]
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1444860965]
@@ -459,3 +475,47 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 2, -98)
 use_collision = true
 size = Vector3(12, 2, 10)
 material = SubResource("mat_purple")
+
+[node name="BhopTutorial" type="Node3D" parent="."]
+
+[node name="Runway" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 46)
+use_collision = true
+size = Vector3(12, 1, 16)
+material = SubResource("mat_gold")
+
+[node name="Hop1" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 61)
+use_collision = true
+size = Vector3(10, 1, 6)
+material = SubResource("mat_gold_dark")
+
+[node name="Hop2" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 71)
+use_collision = true
+size = Vector3(10, 1, 6)
+material = SubResource("mat_gold")
+
+[node name="Hop3" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 82)
+use_collision = true
+size = Vector3(10, 1, 6)
+material = SubResource("mat_gold_dark")
+
+[node name="Hop4" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 94)
+use_collision = true
+size = Vector3(10, 1, 6)
+material = SubResource("mat_gold")
+
+[node name="Hop5" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 107)
+use_collision = true
+size = Vector3(10, 1, 6)
+material = SubResource("mat_gold_dark")
+
+[node name="Finish" type="CSGBox3D" parent="BhopTutorial"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 122)
+use_collision = true
+size = Vector3(14, 1, 12)
+material = SubResource("mat_gold")

@@ -5,11 +5,13 @@ class_name Player extends CharacterBody3D
 
 #region movement and camera
 @export_group("Movement")
-@export var walk_speed := 7.0
-@export var dash_speed := 75.0
-@export var dash_duration := 0.2
+@export var walk_speed := 20.0
+@export var dash_speed := 200.0
+@export var dash_duration := 0.3
 @export var dash_cooldown := 0.4
 @export var dash_speed_curve: Curve
+@export var dash_land_hop_mult := 3.0
+var _dash_hop_ready := false
 
 @export_group("Jump & Gravity")
 @export var gravity_up := 30.0
@@ -18,6 +20,7 @@ class_name Player extends CharacterBody3D
 @export var max_fall_speed := 50.0
 @export var ground_acceleration := 100.0
 @export var air_acceleration := 20.0
+@export var bhop_decay := 1.0
 
 @export_group("Mouse Look")
 @export var vertical_mouse_sensitivity := 0.003
@@ -59,10 +62,12 @@ func _process(delta: float) -> void:
 	#endregion
 	
 func _physics_process(delta: float) -> void:
+	%VelocityLabel.text = str(int(velocity.length()))
 	
 	if _dash_cooldown_left > 0.0:
 		_dash_cooldown_left -= delta
 	
+	# dash tick
 	if _dash_time_left > 0.0:
 		_dash_time_left -= delta
 		# this makes t a percent basically from 0% to 100% in terms of how much dash is completed,
@@ -108,18 +113,38 @@ func _physics_process(delta: float) -> void:
 		
 	var current_speed := walk_speed
 	
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y += jump_velocity
+	var hopped := false
+	if is_on_floor() and Input.is_action_pressed("jump"):
+		if _dash_hop_ready:
+			var h := Vector3(velocity.x, 0.0, velocity.z) # horizontal velocity vector
+			if h.length_squared() < 0.01:
+				h = Vector3(_dash_direction.x, 0.0, _dash_direction.z)
+			h = h.normalized() * maxf(h.length(), velocity.length()) * dash_land_hop_mult
+			velocity.x = h.x
+			velocity.z = h.z
+		velocity.y = jump_velocity
+		hopped = true
 	
-	if is_on_floor():
+	if is_on_floor() and not hopped:
+		_dash_hop_ready = false
+		# normal movement
 		var target := wish_dir * current_speed
 		velocity.x = move_toward(velocity.x, target.x, ground_acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, ground_acceleration * delta)
-	elif wish_dir != Vector3.ZERO:
-		var along := velocity.dot(wish_dir)
-		var add := current_speed - along
-		if add > 0.0:
-			velocity += wish_dir * minf(add, air_acceleration * delta)
+	else:
+		# bhopping is happening
+		if wish_dir != Vector3.ZERO:
+			var along := velocity.dot(wish_dir)
+			var add := current_speed - along
+			if add > 0.0:
+				velocity += wish_dir * minf(add, air_acceleration * delta)
+		
+		var horiz := Vector3(velocity.x, 0.0, velocity.z)
+		var speed := horiz.length()
+		if speed > current_speed:
+			horiz = horiz.move_toward(horiz.normalized() * current_speed, bhop_decay * delta)
+			velocity.x = horiz.x
+			velocity.z = horiz.z
 	
 	move_and_slide()
 	
