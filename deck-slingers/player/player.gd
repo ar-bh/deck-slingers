@@ -7,12 +7,12 @@ enum MovementMode { DASH, SLIDE }
 @export var movement_mode := MovementMode.SLIDE
 
 @export_group("Movement")
-@export var walk_speed := 10.0
+@export var walk_speed := 14.0
 @export var ground_acceleration := 100.0
 @export var air_acceleration := 20.0
 
 @export_group("Jump & Gravity")
-@export var gravity_up := 30.0
+@export var gravity_up := 18.5
 @export var gravity_down := 2.0 * gravity_up
 @export var jump_velocity := 10.0
 @export var max_fall_speed := 50.0
@@ -43,7 +43,15 @@ var _dash_base_velocity := Vector3.ZERO
 #endregion
 
 #region slide movement
-# slide variables
+@export_group("Slide")
+@export var slide_boost := 40.0
+@export var slide_friction := 18.0
+@export var stand_head_height := 1.79
+@export var crouch_head_height := 0.85
+@export var crouch_lerp := 12.0
+@export var max_move_speed := 28.0
+
+var _sliding := false
 #endregion
 
 func _ready() -> void:
@@ -71,7 +79,7 @@ func _process(delta: float) -> void:
 	#endregion
 
 func _physics_process(delta: float) -> void:
-	%VelocityLabel.text = str(int(velocity.length()))
+	%VelocityLabel.text = str(int(Vector3(velocity.x, 0.0, velocity.z).length()))
 	if movement_mode == MovementMode.DASH:
 		_physics_dash(delta)
 	else:
@@ -88,19 +96,71 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y = maxf(velocity.y, -max_fall_speed)
 
 #region slide movement
+func _update_slide_camera(delta: float, crouched:bool) -> void:
+	var target_y := crouch_head_height if crouched else stand_head_height
+	var pos := _head.position
+	pos.y = lerpf(pos.y, target_y, 1.0 - exp(-crouch_lerp * delta))
+	_head.position = pos
+
+func _camera_move_dir(input_dir: Vector2) -> Vector3:
+	var dir: Vector3
+	if input_dir != Vector2.ZERO:
+		dir = _camera.global_transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)
+	else:
+		dir = -_camera.global_transform.basis.z
+	dir.y = 0.0
+	return dir.normalized() if dir.length_squared() > 0.001 else Vector3.ZERO
+
 func _physics_slide(delta: float) -> void:
 	_apply_gravity(delta)
-
+	
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward").normalized()
 	var wish_dir := _wish_dir(input_dir)
-
+	var horiz_speed := Vector3(velocity.x, 0.0, velocity.z).length()
+	
+	# crouch on floor means sliding
+	if not _sliding and is_on_floor() and wish_dir != Vector3.ZERO \
+		and Input.is_action_just_pressed("crouch"):
+		_sliding = true
+		velocity.x += wish_dir.x * slide_boost
+		velocity.z += wish_dir.z * slide_boost
+		
+	# jump cancels slide
 	if Input.is_action_just_pressed("jump") and is_on_floor():
+		_sliding = false
+		var dir := _camera_move_dir(input_dir)
+		if dir != Vector3.ZERO:
+			velocity.x = dir.x * horiz_speed
+			velocity.z = dir.z * horiz_speed
 		velocity.y = jump_velocity
 
-	var target := wish_dir * walk_speed
-	velocity.x = move_toward(velocity.x, target.x, ground_acceleration * delta)
-	velocity.z = move_toward(velocity.z, target.z, ground_acceleration * delta)
+		
+	var crouched := _sliding or Input.is_action_pressed("crouch")
+	_update_slide_camera(delta, crouched)
+	
+	# walk normally
+	if is_on_floor() and not _sliding:
+		var target := wish_dir * walk_speed
+		velocity.x = move_toward(velocity.x, target.x, ground_acceleration * delta)
+		velocity.z = move_toward(velocity.z, target.z, ground_acceleration * delta)
+	elif is_on_floor() and _sliding:
+		velocity.x = move_toward(velocity.x, 0.0, slide_friction * delta)
+		velocity.z = move_toward(velocity.z, 0.0, slide_friction * delta)
+		
+	# do not go too fast
+	var horiz := Vector3(velocity.x, 0.0, velocity.z) # horizontal velocity vector
+	var speed := horiz.length() # horizontal velocity speed
+	if speed > max_move_speed:
+		horiz *= max_move_speed / speed
+		velocity.x = horiz.x
+		velocity.z = horiz.z
+	horiz_speed = Vector3(velocity.x, 0.0, velocity.z).length()
+	if _sliding and is_on_floor() and horiz_speed < walk_speed:
+		_sliding = false
+	
 	move_and_slide()
+	
+	
 #endregion
 
 #region dash movement
